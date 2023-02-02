@@ -8,27 +8,38 @@
 using namespace std;
 
 
-// GLOBAL VARIABLES
-int trajectory = 0;
+// GENERAL GLOBAL VARIABLES
+int FRAME_DELAY = 60000;    // delay between updating ball's position for animation
+int SHOW_TRAJECTORY = 1;    // whether to show the past positions of the ball till now, enabled by default
+GLfloat BALL_RADIUS = 30.0;   // size of the ball
 
 
-GLfloat ball_radius = 30.0;   // size of the ball
 
-vector<pair<GLfloat, GLfloat>> centers;   // positions of the center of the ball
+// ELLIPSE DRAWING UTILITIES
 vector<vector<GLfloat>> ellipses;         // position and measurements of the ellipses
 
 int ellipse = 0;                          // flag for enabling elipse drawing at the bottom of the path
-int num_ellipses = 7;                     // number of ellipses to be drawn during transition
-int curr_ellipse_count = 0;               // number of ellipses that has been drawn during transition
-GLfloat ellipse_deformation[] = {3, 6, 9, 11 , 9, 6, 3};   // the deformation from ball's ideal radius during collision, 5 for 5 ellipses
+                                          // enabled whed collision is detected i.e., h = 0
+                                          
 
-int draw_trigger = 0; // when trajectory is off, this trigger flags whether the postRedisplay was done after circle condition
+int num_ellipses;                         // number of ellipses to be drawn during transition
+                                          // determined based on the collision velocity
+                                          // has a maximum value of 7 (based on the size of deformations )
+
+int curr_ellipse_count = 0;               // number of ellipses that has been drawn during transition
+
+// the deformation from ball's ideal radius during collision
+vector<GLfloat> ellipse_deformation;
+
+int DRAW_TRIGGER = 0; // when trajectory is off, this trigger flags whether the postRedisplay was done after circle condition
                       // or ellipse condition, so as to draw a circle or ellipse conditionally in the display funcntion
 
-int skipNext = 0;     // skip one of the subsequenct 2 cases when h=0, as h=0 happens twice for every collision
+int skipNext = 0;     // skip one of the subsequenct 2 cases when h=0, 
+                      // as h=0 happens twice for every collision, once when incoming, once when outgoing
 
 
 // GLOBAL VARIABLES FOR MOTION OF BALL
+vector<pair<GLfloat, GLfloat>> centers;   // positions of the center of the ball
 GLfloat horizontal_velocity = 10.0;     // constant throughout the motion
 
 float h0 = 700;             // initial height of the ball
@@ -48,6 +59,28 @@ float t_last;
 float vmax;
 
 
+// set num_ellipses based on the current collision velocity
+void set_ellipses_for_velocity (){
+  // static logic for number of ellipses
+  if(abs(v) < 20) num_ellipses = 0;
+  else if(abs(v) < 40) num_ellipses = 1;
+  else if(abs(v) < 80) num_ellipses = 3;
+  else num_ellipses = 5;
+
+
+  // reconstruct the deformation vector
+  if(num_ellipses > 0){
+    ellipse_deformation.clear();
+    ellipse_deformation = vector<GLfloat>(num_ellipses);
+    for(int i = 0; i < (num_ellipses/2) + 1; i++){
+      ellipse_deformation[i] = 3 * (1 + i);
+      ellipse_deformation[num_ellipses-1-i] = 3 * (1 + i);
+    }
+  }
+
+}
+
+
 void init(void)
 {
   glClearColor(1.0, 1.0, 1.0, 0.0);
@@ -55,12 +88,14 @@ void init(void)
 }
 
 
+
+
 void bouncingBall (void){
 
-  // update the position of the center 
   // following the equation of motion
   if(ellipse == 0){
-  
+    
+     // update the position of the center 
     if(hmax > hstop){
       if(freefall){
           float hnew = h + v*dt - 0.5*g*dt*dt;
@@ -89,41 +124,47 @@ void bouncingBall (void){
         
       // push the position of center 
       centers.push_back(make_pair(horizontal_velocity*t, h));
-      // trigger ellipse drawing
+
+      // trigger ellipse drawing if collision
       if(h == 0 && skipNext == 0){
         ellipse = 1;
         curr_ellipse_count = 0;
         skipNext = 1;   // skip the next instance when h=0
+        set_ellipses_for_velocity();  // set the number of ellipses
       }
       else if(h == 0 && skipNext == 1){ //skip and don't draw ellipse
         skipNext = 0; // do not skip next one, as that will be in next collision
       }
 
       // circle draw triggered in display function
-      draw_trigger = 0;
+      DRAW_TRIGGER = 0;
     }
   }
   else if(ellipse == 1) // draw ellipses compressing vertically
   {
-    if(curr_ellipse_count < num_ellipses){
-      GLfloat rx = ball_radius + ellipse_deformation[curr_ellipse_count], ry = ball_radius - ellipse_deformation[curr_ellipse_count];
+    if(curr_ellipse_count < num_ellipses){  // more ellipses to draw
+      // Assume ball is elongated in x and compressed in y by the same amount
+      GLfloat rx = BALL_RADIUS + ellipse_deformation[curr_ellipse_count]; // x elongation
+      GLfloat ry = BALL_RADIUS - ellipse_deformation[curr_ellipse_count]; // y compression
+
+      // defining measurements of the new ellipse
       vector<GLfloat> new_ellipse = {rx, ry, horizontal_velocity*t, h-ellipse_deformation[curr_ellipse_count]};
-      ellipses.push_back(new_ellipse);
+      ellipses.push_back(new_ellipse);  // push the ellipse's measurements
 
       curr_ellipse_count++;
 
       // ellipse draw triggered in display function
-      draw_trigger = 1;
+      DRAW_TRIGGER = 1;
     }
-    else  // finished ellipse drawing, go back to equation of motion
+    else  // finished ellipse drawing, go back to equation of motion of the circle
     {
       ellipse = 0;
-      draw_trigger = 0;
+      DRAW_TRIGGER = 0;
     }
   }
 
 
-  usleep(100000);  // wait before redrawing to make the animation visible 
+  usleep(FRAME_DELAY);  // wait before redrawing to make the animation visible 
   glutPostRedisplay() ; // update and repaint with new position included
 }
 
@@ -132,14 +173,15 @@ void display(void){
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0, 0.0, 0.0);
 
-    if(trajectory)
+    if(SHOW_TRAJECTORY)   // we want to draw all past circle and ellipses
     {
       // draw all the centers that have been pushed in the vector till now
       for(auto itr: centers){
         GLfloat tempX = itr.first, tempY = itr.second;
-        bresenhamCircle(tempX, tempY, ball_radius);
+        bresenhamCircle(tempX, tempY, BALL_RADIUS);
       }
 
+      // draw all the ellipses pushed in the vector till now
       for(auto el: ellipses){
         GLfloat rx = el[0], ry = el[1], xc = el[2], yc = el[3];
         midptellipse(rx, ry, xc, yc);
@@ -148,20 +190,24 @@ void display(void){
     else
     {
       // cricle draw triggered
-      if(draw_trigger == 0){
+      if(DRAW_TRIGGER == 0){    
+        // find the last position
         int curr_size = centers.size();
         GLfloat tempX = centers[curr_size-1].first, tempY = centers[curr_size-1].second;
-        bresenhamCircle(tempX, tempY, ball_radius);
-        // cout << "circle" << tempX << " " << tempY << " " << ball_radius << endl;
+        // draw a circle in the last position
+        bresenhamCircle(tempX, tempY, BALL_RADIUS);
       }
       // ellipse drawing triggered
-      else if(draw_trigger == 1)
+      else if(DRAW_TRIGGER == 1)
       {
+        // find the last position
         int curr_size = ellipses.size();
         auto el = ellipses[curr_size-1];
+        // draw a ellipse in the last position
         GLfloat rx = el[0], ry = el[1], xc = el[2], yc = el[3];
         midptellipse(rx, ry, xc, yc);
-        // cout << "ellipse" << rx << " " << ry << " " << xc << " " << yc << endl;
+
+        cout << curr_ellipse_count << " ellipse " << rx << " " << ry << " " << xc << " " << yc << endl; 
       }
     }
 
@@ -175,7 +221,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     // make so that the ball touches the lower boundary
-    gluOrtho2D(0.0-ball_radius, 1600.0-ball_radius, 0.0-ball_radius, 900.0-ball_radius);
+    gluOrtho2D(0.0-BALL_RADIUS, 1600.0-BALL_RADIUS, 0.0-BALL_RADIUS, 900.0-BALL_RADIUS);
 
 }
 
@@ -202,11 +248,11 @@ int main(int argc, char** argv)
   // take input from command line
   if(argc == 1){
     cout << "Showing trajectory of the ball by default" << endl;
-    trajectory = 1;
+    SHOW_TRAJECTORY = 1;
   }
   else if(argc == 2){
-    sscanf(argv[1], "%d", &trajectory);
-    if(trajectory)
+    sscanf(argv[1], "%d", &SHOW_TRAJECTORY);
+    if(SHOW_TRAJECTORY)
       cout << "Trajectory of the ball: ENABLED" << endl;
     else  
       cout << "Trajectory of the ball: DISABLED" << endl;
@@ -217,8 +263,9 @@ int main(int argc, char** argv)
   }
 
 
-  // clear the vector
+  // clear the vectors
   centers.clear();
+  ellipses.clear();
 
 
   // initialize motion variables
