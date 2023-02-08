@@ -1,5 +1,10 @@
 #include <GL/glut.h>
 
+
+/*
+    Draw an ellipse centered at (xc, yc)
+    with semi-major and semi-minor axes rx and ry respectively
+*/
 void midptellipse(int rx, int ry, int xc, int yc)
 {
     glPushMatrix();

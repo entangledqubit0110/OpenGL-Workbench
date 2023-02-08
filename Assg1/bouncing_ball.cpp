@@ -1,3 +1,12 @@
+/**
+ * NAME: ROUNAK PATRA
+ * ROLL: 18CS30048
+ * EMAIL: rounakpatra2000@gmail.com
+ * DEPARTMENT: Computer Science and Engineering, IIT Kharagpur
+**/
+
+
+
 #include <bits/stdc++.h>
 #include <math.h>
 #include <unistd.h>
