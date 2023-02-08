@@ -209,7 +209,7 @@ void display(void){
         GLfloat rx = el[0], ry = el[1], xc = el[2], yc = el[3];
         midptellipse(rx, ry, xc, yc);
 
-        cout << curr_ellipse_count << " ellipse " << rx << " " << ry << " " << xc << " " << yc << endl; 
+        // cout << curr_ellipse_count << " ellipse " << rx << " " << ry << " " << xc << " " << yc << endl; 
       }
     }
 
