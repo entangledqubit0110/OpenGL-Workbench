@@ -19,7 +19,7 @@ GLfloat BALL_RADIUS = 30.0;   // size of the ball
 vector<vector<GLfloat>> ellipses;         // position and measurements of the ellipses
 
 int ellipse = 0;                          // flag for enabling elipse drawing at the bottom of the path
-                                          // enabled whed collision is detected i.e., h = 0
+                                          // enabled when collision is detected i.e., h = 0
                                           
 
 int num_ellipses;                         // number of ellipses to be drawn during transition
@@ -28,8 +28,9 @@ int num_ellipses;                         // number of ellipses to be drawn duri
 
 int curr_ellipse_count = 0;               // number of ellipses that has been drawn during transition
 
-// the deformation from ball's ideal radius during collision
-vector<GLfloat> ellipse_deformation;
+
+vector<GLfloat> ellipse_deformation;      // the deformation from ball's ideal radius during collision
+                                          // a num_ellipses sized vector
 
 int DRAW_TRIGGER = 0; // when trajectory is off, this trigger flags whether the postRedisplay was done after circle condition
                       // or ellipse condition, so as to draw a circle or ellipse conditionally in the display funcntion
@@ -38,13 +39,14 @@ int skipNext = 0;     // skip one of the subsequenct 2 cases when h=0,
                       // as h=0 happens twice for every collision, once when incoming, once when outgoing
 
 
+
 // GLOBAL VARIABLES FOR MOTION OF BALL
 vector<pair<GLfloat, GLfloat>> centers;   // positions of the center of the ball
-GLfloat horizontal_velocity = 10.0;     // constant throughout the motion
+GLfloat horizontal_velocity = 10.0;       // constant throughout the motion
 
 float h0 = 700;             // initial height of the ball
 float v = 0;                // m/s, current velocity
-const float g = 10;         // m/s^2, accelaration due to gravity
+const float g = 10;         // m/s^2, accelaration due to gravity, constant
 float t = 0;                // starting time
 
 float rho = 0.85;           // coefficient of restitution
@@ -89,7 +91,7 @@ void init(void)
 
 
 
-
+// the function where the ball's motion is updated
 void bouncingBall (void){
 
   // following the equation of motion
@@ -125,11 +127,11 @@ void bouncingBall (void){
       // push the position of center 
       centers.push_back(make_pair(horizontal_velocity*t, h));
 
-      // trigger ellipse drawing if collision
+      // trigger ellipse drawing if collision and incoming
       if(h == 0 && skipNext == 0){
         ellipse = 1;
         curr_ellipse_count = 0;
-        skipNext = 1;   // skip the next instance when h=0
+        skipNext = 1;   // skip the next instance when h=0, i.e., outgoing
         set_ellipses_for_velocity();  // set the number of ellipses
       }
       else if(h == 0 && skipNext == 1){ //skip and don't draw ellipse
