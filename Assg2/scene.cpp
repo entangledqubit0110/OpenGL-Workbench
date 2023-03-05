@@ -306,8 +306,8 @@ void display(void){
     glTranslatef(0, 500-45, -5);
     glScalef(1000, 1000, 100);
     
-    for(int i = 0; i < 3; i++) cout << skycolor[i] << " ";
-    cout << endl;
+    // for(int i = 0; i < 3; i++) cout << skycolor[i] << " ";
+    // cout << endl;
 
     glColor3f(skycolor[0], skycolor[1], skycolor[2]);
     drawUnitSqaure();
@@ -436,13 +436,6 @@ void timerDay (int value) {
     glutTimerFunc(10, timerDay, 0);
     dayCycleSpin += 0.2;
     if (dayCycleSpin > 360) dayCycleSpin -= 360;
-    // if (dayCycleSpin > 180){
-    //     skycolor[0] = 0, skycolor[1] = 0, skycolor[2] = 1;
-    // }
-    // else
-    // {
-    //     skycolor[0] = 0.5, skycolor[1] = 0.7, skycolor[2] = 1;
-    // }
     setSkyColor();
     sunSpin += 1.0;
     if (sunSpin > 360) sunSpin -= 360;
