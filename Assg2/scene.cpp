@@ -5,13 +5,32 @@
 
 using namespace std;
 
-GLfloat skycolor[3] = {0.6, 0.8, 1};
 GLfloat dayCycleSpin = 30;
 GLfloat wheelSpin = 0;
 GLfloat sunSpin = 0;
 GLfloat moveForward = -250;
+
 GLfloat CARLIMIT[2] = {-250, 250};
 
+int SKYNIGHT[5][3] =  {
+                        {190,169,222},
+                        {135,136,156},
+                        {84,107,171},
+                        {46,68,130},
+                        {19, 24, 98}
+                    };
+
+int SKYDAY[5][3] =  {
+                        {0,249,255},
+                        {122,252,255},
+                        {145,252,255},
+                        {186,253,255},
+                        {201,252,253}
+                    };
+
+GLfloat skycolor[3] = {0.0, 0.0, 0.0};
+
+                
 
 void init(void)
 {
@@ -19,6 +38,51 @@ void init(void)
     glShadeModel(GL_FLAT);
 }
 
+
+// set the sky's color from current angle of sun & moon
+void setSkyColor () {
+    int colorIdx = 0;
+    // day time
+    if (dayCycleSpin < 180){
+        // rising sun
+        if (dayCycleSpin < 90){
+            colorIdx = int(dayCycleSpin) / 18;
+        }
+        // falling sun
+        else if (dayCycleSpin > 90)
+        {
+            colorIdx = 4 - (int(dayCycleSpin - 90) / 18);
+        }
+        else
+        {
+            colorIdx = 4;
+        }
+
+        for(int i = 0; i < 3; i++) skycolor[i] = SKYDAY[colorIdx][i]/255.0;
+
+    }
+    // night
+    else
+    {
+        // rising moon
+        GLfloat theta = dayCycleSpin - 180;
+        if (theta < 90){
+            colorIdx = int(theta) / 18;
+        }
+        // falling sun
+        else if (theta > 90)
+        {
+            colorIdx = 4 - (int(theta - 90) / 18);
+        }
+        else
+        {
+            colorIdx = 90;
+        }
+
+        for(int i = 0; i < 3; i++) skycolor[i] = SKYNIGHT[colorIdx][i]/255.0;
+    }
+
+}
 
 // draw an unit square at (0, 0, 0)
 void drawUnitSqaure (){
@@ -109,12 +173,12 @@ void drawDoor () {
     glEnd();
 }
 
-
+// draw the car
 void drawCar (){
 
 }
 
-
+// draw sun and moon
 void drawSunAndMoon (){
     glPushMatrix();
     glRotatef(dayCycleSpin, 0, 0, 1);
@@ -241,6 +305,10 @@ void display(void){
     glPushMatrix();
     glTranslatef(0, 500-45, -5);
     glScalef(1000, 1000, 100);
+    
+    for(int i = 0; i < 3; i++) cout << skycolor[i] << " ";
+    cout << endl;
+
     glColor3f(skycolor[0], skycolor[1], skycolor[2]);
     drawUnitSqaure();
     glPopMatrix();
@@ -368,14 +436,14 @@ void timerDay (int value) {
     glutTimerFunc(10, timerDay, 0);
     dayCycleSpin += 0.2;
     if (dayCycleSpin > 360) dayCycleSpin -= 360;
-    if (dayCycleSpin > 180){
-        skycolor[0] = 0, skycolor[1] = 0, skycolor[2] = 1;
-    }
-    else
-    {
-        skycolor[0] = 0.5, skycolor[1] = 0.7, skycolor[2] = 1;
-    }
-    
+    // if (dayCycleSpin > 180){
+    //     skycolor[0] = 0, skycolor[1] = 0, skycolor[2] = 1;
+    // }
+    // else
+    // {
+    //     skycolor[0] = 0.5, skycolor[1] = 0.7, skycolor[2] = 1;
+    // }
+    setSkyColor();
     sunSpin += 1.0;
     if (sunSpin > 360) sunSpin -= 360;
 
@@ -397,6 +465,8 @@ void timerCar (int value) {
 
 int main(int argc, char** argv)
 {
+    setSkyColor();  // set sky color for first time
+
     glutInit(&argc, argv) ;
     glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB|GLUT_DEPTH);
     glutInitWindowSize(800, 800) ;
