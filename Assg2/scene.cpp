@@ -5,13 +5,14 @@
 
 using namespace std;
 
-GLfloat dayCycleSpin = 30;
-GLfloat wheelSpin = 0;
-GLfloat sunSpin = 0;
-GLfloat moveForward = -250;
+GLfloat dayCycleSpin = 30;      // rotation to dictate position of sun and moon
+GLfloat sunSpin = 0;            // rotate sun around its center
 
-GLfloat CARLIMIT[2] = {-250, 250};
+GLfloat moveForward = -250;     // translation of the car along horizontal axis
+GLfloat wheelSpin = 0;        // spin of the wheels, clockwise as the car moves from left to right
+GLfloat CARLIMIT[2] = {-250, 250};  // car movement boundaries
 
+// night sky transition colors
 int SKYNIGHT[5][3] =  {
                         {190,169,222},
                         {135,136,156},
@@ -19,7 +20,7 @@ int SKYNIGHT[5][3] =  {
                         {46,68,130},
                         {19, 24, 98}
                     };
-
+// day sky transition colors
 int SKYDAY[5][3] =  {
                         {0,249,255},
                         {122,252,255},
@@ -27,7 +28,7 @@ int SKYDAY[5][3] =  {
                         {186,253,255},
                         {201,252,253}
                     };
-
+// current skycolor
 GLfloat skycolor[3] = {0.0, 0.0, 0.0};
 
                 
@@ -228,10 +229,10 @@ void drawSunAndMoon (){
 void drawWheel () {
     glPushMatrix();
     glTranslatef(0, -130, 0.3);
-    glRotatef(wheelSpin, 0, 0, 1);
+    glRotatef(-wheelSpin, 0, 0, 1);
 
     // spokes
-    int num_spokes = 10;
+    int num_spokes = 6;
     for (int i = 0; i < num_spokes; i++){
         glPushMatrix();
         glRotatef(i*(180.0/float(num_spokes)), 0, 0, 1);
@@ -446,7 +447,7 @@ void timerDay (int value) {
 void timerCar (int value) {
     glutTimerFunc(10, timerCar, 0);
 
-    wheelSpin += 5.0;
+    wheelSpin += 1.5;
     if (wheelSpin > 360) wheelSpin -= 360;
 
     moveForward += 2;
