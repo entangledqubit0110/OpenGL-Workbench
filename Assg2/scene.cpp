@@ -3,32 +3,21 @@
 #include <unistd.h>
 #include <GL/glut.h>
 
+#include "basic_shapes.h"
+#include "constants.h"
+
 using namespace std;
 
+// GLOBAL VARIABLES
+// DAY-NIGHT CYCLE
 GLfloat dayCycleSpin = 30;      // rotation to dictate position of sun and moon
 GLfloat sunSpin = 0;            // rotate sun around its center
 
+// CAR MOVEMENT
 GLfloat moveForward = -250;     // translation of the car along horizontal axis
 GLfloat wheelSpin = 0;        // spin of the wheels, clockwise as the car moves from left to right
-GLfloat CARLIMIT[2] = {-250, 250};  // car movement boundaries
 
-// night sky transition colors
-int SKYNIGHT[5][3] =  {
-                        {190,169,222},
-                        {135,136,156},
-                        {84,107,171},
-                        {46,68,130},
-                        {19, 24, 98}
-                    };
-// day sky transition colors
-int SKYDAY[5][3] =  {
-                        {0,249,255},
-                        {122,252,255},
-                        {145,252,255},
-                        {186,253,255},
-                        {201,252,253}
-                    };
-// current skycolor
+// SKYCOLOR
 GLfloat skycolor[3] = {0.0, 0.0, 0.0};
 
                 
@@ -85,58 +74,20 @@ void setSkyColor () {
 
 }
 
-// draw an unit square at (0, 0, 0)
-void drawUnitSqaure (){
-    glRectf(-0.5, -0.5, 0.5, 0.5);
-}
-
-// draw an unit square loop at (0, 0, 0)
-void drawUnitSqaureLoop (){
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(-0.5, -0.5, 0);
-    glVertex3f(-0.5, 0.5, 0);
-    glVertex3f(0.5, 0.5, 0);
-    glVertex3f(0.5, -0.5, 0);
-    glEnd();
-} 
-
-// draw a circle using polygon at (0, 0, 0)
-void drawCircle(float r, int slices) {
-    glBegin(GL_POLYGON);
-    float perEdgeAngle = 2.0*M_PI/float(slices);
-    for (int i = 0; i < slices; i++)   {
-        float theta = float(i) * perEdgeAngle; 
-        float x = r * cosf(theta);
-        float y = r * sinf(theta);
-        glVertex3f(x, y, 0); 
-    }
-    glEnd();
-}
-
-// draw a loop using lineloop at (0, 0, 0)
-void drawLoop(float r, int slices) {
-    glBegin(GL_LINE_LOOP);
-    float perEdgeAngle = 2.0*M_PI/float(slices);
-    for (int i = 0; i < slices; i++)   {
-        float theta = float(i) * perEdgeAngle; 
-        float x = r * cosf(theta);
-        float y = r * sinf(theta);
-        glVertex3f(x, y, 0); 
-    }
-    glEnd();
-}
 
 
+// draw windows
 void drawWindow () {
-
     glScalef(20, 30, 1);
-
+    // border
     glColor3f(0, 0, 0);
     drawUnitSqaureLoop();
     
+    // window
     glColor3f(0.5, 0.5, 0.5);
     drawUnitSqaure();
-
+    
+    // window bars
     glColor3f(0, 0, 0);
     glBegin(GL_LINES);
     glVertex3f(0, -0.5, 0.1);
@@ -152,19 +103,18 @@ void drawWindow () {
     glVertex3f(0.25, -0.5, 0.1);
     glVertex3f(0.25, 0.5, 0.1);
     glEnd();
-
 }
 
+// draw doors
 void drawDoor () {
+    // door opening
     glScalef(40, 60, 1);
     glColor3f(0.5, 0.5, 0.5);
     drawUnitSqaure();
-    glPopMatrix();
 
-    glPushMatrix();
-    glTranslatef(0, -15, 0.2);
-    glScalef(40, 60, 1);
+    glTranslatef(0, 0, 0.1);
     
+    // wooden door
     glColor3f(0.6, 0.3, 0);
     glBegin(GL_POLYGON);
     glVertex3f(-0.5, -0.5, 0);
@@ -174,22 +124,19 @@ void drawDoor () {
     glEnd();
 }
 
-// draw the car
-void drawCar (){
-
-}
 
 // draw sun and moon
 void drawSunAndMoon (){
     glPushMatrix();
-    glRotatef(dayCycleSpin, 0, 0, 1);
+    glRotatef(dayCycleSpin, 0, 0, 1);      // rotation for day-night cycle
 
+    // sun
     glPushMatrix();
     glTranslatef(150, 0, -3);
-    glRotatef(sunSpin, 0, 0, 1);
+    glRotatef(sunSpin, 0, 0, 1);    // rotation around center
 
     glColor3f(0.9, 0.8, 0.1);
-    // rays
+    // sun rays
     int num_rays = 8;
     for (int i = 0; i < num_rays; i++){
         glPushMatrix();
@@ -203,10 +150,11 @@ void drawSunAndMoon (){
         glPopMatrix();
     }
 
+    // sun circle
     drawCircle(30, 40);
     glPopMatrix();
 
-
+    // moon
     glPushMatrix();
     glTranslatef(-150, 0, -3);
     glColor3f(0.9, 0.9, 0.9);
@@ -215,10 +163,11 @@ void drawSunAndMoon (){
 
     glPopMatrix();
 
+    // covering circle of background color to render moon as curved shape
     GLfloat moonX = -150*cos(dayCycleSpin*M_PI/180.0);
     GLfloat moonY = -150*sin(dayCycleSpin*M_PI/180.0);
     glPushMatrix();
-    glTranslatef(moonX-15, moonY+15, -2);
+    glTranslatef(moonX-15, moonY+15, -2.5);
     glColor3f(skycolor[0], skycolor[1], skycolor[2]);
     drawCircle(40, 40);
     glPopMatrix();
@@ -256,20 +205,64 @@ void drawWheel () {
     glPopMatrix();
 }
 
+
+// draw the car
+void drawCar (){
+    glPushMatrix();
+    glTranslatef(moveForward, 0, 0);
+
+    // car body
+    glPushMatrix();
+    glTranslatef(0, -120, 0.4);
+
+    // lower part
+    glPushMatrix();
+    glScalef(70, 20, 1);
+    glColor3f(0, 0.6, 0.3);
+    drawUnitSqaure();
+    glPopMatrix();
+
+    // upper part
+    glTranslatef(0, 10, 0);
+    glPushMatrix();
+    glScalef(40, 20, 1);
+    glColor3f(0, 0.6, 0.4);
+    drawUnitSqaure();
+    glPopMatrix();
+
+    glPopMatrix();
+    // front wheel
+    glPushMatrix();
+    glTranslatef(-20, 0, 0);
+    drawWheel();
+    glPopMatrix();
+
+    // rear wheel
+    glPushMatrix();
+    glTranslatef(20, 0, 0);
+    drawWheel();
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
 void display(void){
 
     // color of the background
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-    // main house, center at 0, 140 X 90
+    /*
+    **************  HOUSE   **************
+    */
+
+    // center at 0, 140 X 90
     glPushMatrix();
     glTranslatef(0, 20, 0);
 
     // roof
     glPushMatrix();
-    glTranslatef(0, 45+10, 0);
+    glTranslatef(0, 45+10, 0);  // roof shifted up by (house_width/2) + (roof_width/2)
     glScalef(150, 20, 1);
-    
     glColor3f(0.6, 0.2, 0.1);
     drawUnitSqaure();
     glPopMatrix();
@@ -280,7 +273,6 @@ void display(void){
     glColor3f(0.6, 0.6, 0.4);
     drawUnitSqaure();
     glPopMatrix();
-
 
     // left window    
     glPushMatrix();
@@ -301,17 +293,28 @@ void display(void){
     glPopMatrix();
 
     glPopMatrix();
+    
+    /*
+    
+    **********  HOUSE END   *************
+    
+    */
 
-    // background top
+    /*
+    **************  BACKGROUND  **************
+    */
+
+    // sky
     glPushMatrix();
     glTranslatef(0, 500-45, -5);
     glScalef(1000, 1000, 100);
-    
-    // for(int i = 0; i < 3; i++) cout << skycolor[i] << " ";
-    // cout << endl;
-
     glColor3f(skycolor[0], skycolor[1], skycolor[2]);
     drawUnitSqaure();
+    glPopMatrix();
+
+    // draw Sun & Moon
+    glPushMatrix();
+    drawSunAndMoon();
     glPopMatrix();
 
     //background green
@@ -322,12 +325,7 @@ void display(void){
     drawUnitSqaure();
     glPopMatrix();
 
-    // draw Sun & Moon
-    glPushMatrix();
-    drawSunAndMoon();
-    glPopMatrix();
-
-    // background bottom
+    // road
     glPushMatrix();
     glTranslatef(0, -500-45, 0);
     glScalef(1000, 1000, 100);
@@ -335,7 +333,7 @@ void display(void){
     drawUnitSqaure();
     glPopMatrix();
 
-    // stripe
+    // stripes
     glPushMatrix();
     glTranslatef(0, -110, 0.1);
     glScalef(1000, 10, 100);
@@ -378,43 +376,15 @@ void display(void){
     drawUnitSqaure();
     glPopMatrix();
 
-    // car
-    glPushMatrix();
-    glTranslatef(moveForward, 0, 0);
+    /*
+    **************  BACKGROUND END  **************
+    */
 
-    // car body
-    glPushMatrix();
-    glTranslatef(0, -120, 0.4);
+   /*
+   *************     CAR     ****************
+   */
 
-    glPushMatrix();
-    glScalef(70, 20, 1);
-    glColor3f(0, 0.6, 0.3);
-    drawUnitSqaure();
-    glPopMatrix();
-
-    glTranslatef(0, 10, 0);
-    glPushMatrix();
-    glScalef(40, 20, 1);
-    glColor3f(0, 0.6, 0.4);
-    drawUnitSqaure();
-    glPopMatrix();
-
-    glPopMatrix();
-    // front wheel
-    glPushMatrix();
-    glTranslatef(-20, 0, 0);
-    drawWheel();
-    glPopMatrix();
-
-    // rear wheel
-    glPushMatrix();
-    glTranslatef(20, 0, 0);
-    drawWheel();
-    glPopMatrix();
-
-    glPopMatrix();
-
-
+    drawCar();
 
     // glutSwapBuffers() ;
     glFlush();
@@ -433,6 +403,7 @@ void reshape(int w, int h)
 }
 
 
+// timer function to animate day-night cycle
 void timerDay (int value) {
     glutTimerFunc(10, timerDay, 0);
     dayCycleSpin += 0.2;
@@ -444,8 +415,10 @@ void timerDay (int value) {
     glutPostRedisplay();
 }
 
+
+// timer function to animate car movement
 void timerCar (int value) {
-    glutTimerFunc(10, timerCar, 0);
+    glutTimerFunc(6, timerCar, 0);
 
     wheelSpin += 1.5;
     if (wheelSpin > 360) wheelSpin -= 360;
@@ -470,7 +443,9 @@ int main(int argc, char** argv)
     glutDisplayFunc(display) ;
     glutReshapeFunc(reshape) ;
     glEnable(GL_DEPTH_TEST);
+
     glutTimerFunc(10, timerDay, 0);
-    glutTimerFunc(10, timerCar, 0);
+    glutTimerFunc(6, timerCar, 0);
+    
     glutMainLoop() ;
 }
