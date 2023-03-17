@@ -1,3 +1,11 @@
+/**
+ * NAME: ROUNAK PATRA
+ * ROLL: 18CS30048
+ * EMAIL: rounakpatra2000@gmail.com
+ * DEPARTMENT: Computer Science and Engineering, IIT Kharagpur
+**/
+
+
 #include <bits/stdc++.h>
 #include <math.h>
 #include <unistd.h>
@@ -328,7 +336,7 @@ void display(void){
     // road
     glPushMatrix();
     glTranslatef(0, -500-45, 0);
-    glScalef(1000, 1000, 100);
+    glScalef(1000, 1000, 1);
     glColor3f(0, 0, 0);
     drawUnitSqaure();
     glPopMatrix();
@@ -336,7 +344,7 @@ void display(void){
     // stripes
     glPushMatrix();
     glTranslatef(0, -110, 0.1);
-    glScalef(1000, 10, 100);
+    glScalef(1000, 10, 1);
     glColor3f(0.9, 0.9, 0.8);
     drawUnitSqaure();
     glPopMatrix();
