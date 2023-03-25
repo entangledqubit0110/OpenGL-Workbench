@@ -230,6 +230,7 @@ void reshape (int w, int h)
  * U: reset the position of the object and lights
 */
 
+// rotation speed increase and decrease
 void processSpecialKey (int key, int x, int y){
 
     if (key == GLUT_KEY_DOWN){
@@ -242,6 +243,7 @@ void processSpecialKey (int key, int x, int y){
     glutPostRedisplay();
 }
 
+// keyboard input
 void keyboardHandler (unsigned char c, int x, int y) {
     // ambient light on/off
     if (c == 'L' || c == 'l'){
@@ -299,7 +301,7 @@ void keyboardHandler (unsigned char c, int x, int y) {
     glutPostRedisplay();
 }
 
-
+// mouse motion
 void mouse(int button, int state, int x, int y)
 {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
