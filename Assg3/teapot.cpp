@@ -230,6 +230,18 @@ void reshape (int w, int h)
  * U: reset the position of the object and lights
 */
 
+void processSpecialKey (int key, int x, int y){
+
+    if (key == GLUT_KEY_DOWN){
+        for(int i = 0; i < 3; i++) rotation_amt[i] = max(rotation_amt[i] - 0.5, 0.5);
+    }
+    else if (key == GLUT_KEY_UP){
+        for(int i = 0; i < 3; i++) rotation_amt[i] = min(rotation_amt[i] + 0.5, 10.0);
+    }
+
+    glutPostRedisplay();
+}
+
 void keyboardHandler (unsigned char c, int x, int y) {
     // ambient light on/off
     if (c == 'L' || c == 'l'){
@@ -341,6 +353,7 @@ int main(int argc, char** argv)
     glutKeyboardFunc(keyboardHandler);
     glutMouseFunc(mouse);
     glutMotionFunc(mouseMotion);
+    glutSpecialFunc(processSpecialKey);
     glutMainLoop();
     return 0;
 }
