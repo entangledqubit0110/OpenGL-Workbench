@@ -11,16 +11,25 @@
 
 using namespace std;
 
-/**
+#define ENABLED "ENABLED"
+#define DISABLED "DISABLED"
+#define STATUS(x) (x)? ENABLED : DISABLED
+
+enum MotionType {
+    NORMAL= 0,
+    ANGULAR = 1
+};
+
+/*
  * ------------------------------------------------------------
  *                      GLOBAL VARIABLES
  * ------------------------------------------------------------
  * size of window
  * eye position variables
- * background color variables
+ * object color variables
  * mouse control variables
  * light control variables
-**/
+*/
 
 // size
 int width = 700;
@@ -29,7 +38,12 @@ int height = 700;
 // eye position
 GLfloat eye[] = {0.0, 4.0, -10.0};
 // color
+// background
 GLfloat bg_color[] = {0.0, 0.0, 0.0, 1.0};
+// teapot
+GLfloat teapot_color[] =    {0.6, 0.6, 0.6, 0.6,
+                            0.6, 0.6, 0.6, 1.0,
+                            0.8, 0.8, 0.8, 1.0};
 
 // mouse control
 bool mouseDown = false;
@@ -39,8 +53,11 @@ float xdiff = 0.0;
 float ydiff = 0.0;
 
 // control variables
-int motionMode = 0;
+
+
+MotionType motionMode = NORMAL;
 bool enableAmbient = false;
+bool enableViewPoint = false;
 bool enableRed = false;
 bool enableBlue = false;
 bool enableGreen = false;
@@ -50,8 +67,14 @@ GLfloat blue_position[3];
 GLfloat green_position[3];
 
 
-/*
- * CONTROL FUNCTIONS
+/**
+ * ---------------------------------------------------------------------
+ *                          LIGHT CONTROL FUNCTIONS
+ * ---------------------------------------------------------------------
+ * This section contains the creation methods of red, blue and green lights
+ * as well as the ambient and viewpoint lights, conditioned by the control
+ * variables truth values.
+ * For more details regarding the light parameters, refer to lighting.h
 */
 
 void createAmbientLight () {
@@ -64,9 +87,15 @@ void createRedLight () {
     red_position[1] = red_light_height;
     red_position[2] = red_light_radius * sin(M_PI*red_theta/180.0);
     
-    if (enableRed) setRedLight(red_position);
-    else unsetRedLight();
+    if (enableRed) {
+        setRedLight(red_position);
+    }
+    else 
+    {
+        unsetRedLight();
+    }
 
+    createSource(red_position, enableRed, 1.0, 0.0, 0.0, 0.6);
 }
 
 void createBlueLight () {
@@ -84,9 +113,14 @@ void createBlueLight () {
     }
 
     
-    if (enableBlue) setBlueLight(blue_position);
-    else unsetBlueLight();
+    if (enableBlue) {
+        setBlueLight(blue_position);
+    }
+    else {
+        unsetBlueLight();
+    }
 
+    createSource(blue_position, enableBlue, 0.0, 0.0, 1.0, 0.6);
 }
 
 void createGreenLight () {
@@ -103,13 +137,30 @@ void createGreenLight () {
             green_position[1] = green_light_height;
     }
     
-    if (enableGreen) setGreenLight(green_position);
-    else unsetGreenLight();
+    if (enableGreen) 
+    {
+        setGreenLight(green_position);
+    }
+    else {
+        unsetGreenLight();
+    }
 
+    createSource(green_position, enableGreen, 0.0, 1.0, 0.0, 0.6);
+}
+
+void createViewPointLight () {
+    if (enableViewPoint) setViewPointLight(eye);
+    else unsetViewPointLight();
 }
 
 /*
- * DISPLAY UTILITES 
+ * --------------------------------------------------------------------
+ *                              DISPLAY UTILITES 
+ * --------------------------------------------------------------------
+ * The following section contains the main display function where
+ * the light sources are created and teapot is created and colored with
+ * material attributes.
+
 */
 
 void init(void) 
@@ -125,6 +176,7 @@ void display(void)
 {
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     createAmbientLight();
+    createViewPointLight();
 
     glPushMatrix();
     glRotatef(-xrot, 1.0, 0.0, 0.0);
@@ -134,7 +186,16 @@ void display(void)
     createBlueLight();
     createGreenLight();
     
+    glPushAttrib(GL_LIGHTING_BIT);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, teapot_color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, teapot_color + 4);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, teapot_color + 8);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 120.0);
+    
     glutSolidTeapot(10);
+    
+    glPopAttrib();
+
     glPopMatrix();
     
     glutSwapBuffers();
@@ -153,11 +214,34 @@ void reshape (int w, int h)
     gluLookAt(eye[0], eye[1], eye[2], 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 }
 
+/*
+ * --------------------------------------------------------------------------
+ *                      EVENT HANDLERS (CONTROL AND MOTION)
+ * --------------------------------------------------------------------------
+ * The following section handles the user input controlling the ON/OFF events
+ * of all the lights. Also the mouse drag movement is handled here.
+ * The Key controls are:
+ * L: ON/OFF global ambient lighting
+ * V: ON/OFF viewpoint lighting
+ * R: ON/OFF red light
+ * B: ON/OFF blue light
+ * G: ON/OFF green light
+ * A: ON/OFF animation
+ * U: reset the position of the object and lights
+*/
+
 void keyboardHandler (unsigned char c, int x, int y) {
     // ambient light on/off
-    if (c == 'M' || c == 'm'){
+    if (c == 'L' || c == 'l'){
         enableAmbient = !enableAmbient;
-        cout << "Global Light = " << enableAmbient << endl;
+        string status = STATUS(enableAmbient);
+        cout << "[GLOBAL LIGHTING]: " << status << endl;
+    }
+    // viewpoint light on/off
+    if (c == 'V' || c == 'v'){
+        enableViewPoint = !enableViewPoint;
+        string status = STATUS(enableViewPoint);
+        cout << "[VIEWPOINT LIGHT]: " << status << endl;
     }
     // reset rotated postion
     if (c == 'U' || c == 'u'){
@@ -167,26 +251,31 @@ void keyboardHandler (unsigned char c, int x, int y) {
         blue_theta = 0.0;
         green_theta = 120.0;
         animation = false;
-        cout << "Reset Position: Success" << endl;
+        cout << "[RESET POSITION]: Success" << endl;
     }
     // red light
     if (c == 'R' || c == 'r'){
         enableRed = !enableRed;
-        cout << "Red Light = " << enableRed << endl;
+        string status = STATUS(enableRed);
+        cout << "[RED LIGHT]: " << status << endl;
     }
     // blue light
     if (c == 'B' || c == 'b'){
         enableBlue = !enableBlue;
-        cout << "Blue Light = " << enableBlue << endl;
+        string status = STATUS(enableBlue);
+        cout << "[BLUE LIGHT]: " << status << endl;
     }
     // green light
     if (c == 'G' || c == 'g'){
         enableGreen = !enableGreen;
-        cout << "Green Light = " << enableGreen << endl;
+        string status = STATUS(enableGreen);
+        cout << "[GREEN LIGHT]: " << status << endl;
     }
     // animation
     if (c == 'A' || c== 'a'){
         animation = !animation;
+        string status = STATUS(animation);
+        cout << "[ANIMATION]: " << status << endl;
         if(animation){
             glutIdleFunc(spinLights);
         }
@@ -221,10 +310,26 @@ void mouseMotion(int x, int y)
     }
 }
 
+// set rotation type according to passed cmd line argument
+void setRotationType (int argc, char** argv){
+    if (argc > 1){
+        string arg = argv[1];
+        if (arg == "ANGULAR"){
+            motionMode = ANGULAR;
+        }
+        else
+        {
+            motionMode = NORMAL;
+        }
+    }
+}
 
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
+    setRotationType(argc, argv);
+
+
     glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize (width, height); 
     glutInitWindowPosition (100, 100);
