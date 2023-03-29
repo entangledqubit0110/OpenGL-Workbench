@@ -166,9 +166,9 @@ void spinLights () {
  * Torch-like powerful directional light
 */
 
-GLfloat viewport_colors[] = {0.5, 0.5, 0.5, 1.0,
-                            0.7, 0.7, 0.7, 0.5,
-                            0.8, 0.8, 0.8, 0.5};
+GLfloat viewport_colors[] = {0.3, 0.3, 0.3, 1.0,
+                            0.6, 0.6, 0.6, 0.5,
+                            0.7, 0.7, 0.7, 0.5};
 
 void setViewPointLight (GLfloat position[]) {
     glEnable(GL_LIGHT4);

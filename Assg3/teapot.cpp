@@ -182,20 +182,20 @@ void display(void)
     glRotatef(-xrot, 1.0, 0.0, 0.0);
     glRotatef(yrot, 0.0, 1.0, 0.0);
 
-    createRedLight();
-    createBlueLight();
-    createGreenLight();
-    
     glPushAttrib(GL_LIGHTING_BIT);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, teapot_color);
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, teapot_color + 4);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, teapot_color + 8);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 120.0);
+
+    createBlueLight();
+    createRedLight();
+    createGreenLight();
     
     glutSolidTeapot(10);
     
     glPopAttrib();
-
+    
     glPopMatrix();
     
     glutSwapBuffers();
